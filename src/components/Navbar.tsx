@@ -35,9 +35,14 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
-          {/* Logo */}
-          <Link to="/" className="text-white font-bold text-xl md:text-2xl">
-            BEATBOX
+          {/* Logo and Studio Name */}
+          <Link to="/" className="flex items-center gap-2 text-white">
+            <div className="w-10 h-10 bg-studio-blue rounded-full flex items-center justify-center border-2 border-white">
+              <span className="font-bold text-white text-lg">BB</span>
+            </div>
+            <span className="font-bold text-xl md:text-2xl">
+              BEATBOX DANCE & FITNESS
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
