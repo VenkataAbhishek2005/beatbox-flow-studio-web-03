@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
@@ -37,46 +37,50 @@ const Navbar = () => {
         <div className="flex justify-between items-center">
           {/* Logo and Studio Name */}
           <Link to="/" className="flex items-center gap-2 text-white">
-            <div className="w-10 h-10 bg-studio-blue rounded-full flex items-center justify-center border-2 border-white">
+            <div className="w-10 h-10 bg-studio-blue rounded-full flex items-center justify-center border-2 border-white shadow-md">
               <span className="font-bold text-white text-lg">BB</span>
             </div>
-            <span className="font-bold text-xl md:text-2xl">
+            <span className="font-bold text-xl md:text-2xl tracking-wide">
               BEATBOX DANCE & FITNESS
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center space-x-8">
             <Link
               to="/"
-              className={`navbar-link ${isScrolled ? "text-white" : "text-white"}`}
+              className="navbar-link text-white hover:text-studio-lightBlue transition-colors"
             >
               Home
             </Link>
             <Link
               to="/classes"
-              className={`navbar-link ${isScrolled ? "text-white" : "text-white"}`}
+              className="navbar-link text-white hover:text-studio-lightBlue transition-colors"
             >
               Classes
             </Link>
             <Link
               to="/instructors"
-              className={`navbar-link ${isScrolled ? "text-white" : "text-white"}`}
+              className="navbar-link text-white hover:text-studio-lightBlue transition-colors"
             >
               Instructors
             </Link>
             <Link
               to="/gallery"
-              className={`navbar-link ${isScrolled ? "text-white" : "text-white"}`}
+              className="navbar-link text-white hover:text-studio-lightBlue transition-colors"
             >
               Gallery
             </Link>
-            <Link
-              to="/#contact"
-              className={`navbar-link ${isScrolled ? "text-white" : "text-white"}`}
+            
+            {/* Login Button */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm"
             >
-              Contact
-            </Link>
+              <LogIn className="w-4 h-4" />
+              <span>Login</span>
+            </Button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -93,43 +97,47 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden mt-2 py-4 bg-studio-blue animate-fade-in">
+          <div className="md:hidden mt-2 py-4 bg-studio-blue rounded-lg animate-fade-in shadow-lg">
             <nav className="flex flex-col space-y-4">
               <Link
                 to="/"
-                className="text-white px-4 py-2 hover:bg-studio-darkBlue"
+                className="text-white px-4 py-2 hover:bg-studio-darkBlue rounded-md"
                 onClick={toggleMenu}
               >
                 Home
               </Link>
               <Link
                 to="/classes"
-                className="text-white px-4 py-2 hover:bg-studio-darkBlue"
+                className="text-white px-4 py-2 hover:bg-studio-darkBlue rounded-md"
                 onClick={toggleMenu}
               >
                 Classes
               </Link>
               <Link
                 to="/instructors"
-                className="text-white px-4 py-2 hover:bg-studio-darkBlue"
+                className="text-white px-4 py-2 hover:bg-studio-darkBlue rounded-md"
                 onClick={toggleMenu}
               >
                 Instructors
               </Link>
               <Link
                 to="/gallery"
-                className="text-white px-4 py-2 hover:bg-studio-darkBlue"
+                className="text-white px-4 py-2 hover:bg-studio-darkBlue rounded-md"
                 onClick={toggleMenu}
               >
                 Gallery
               </Link>
-              <Link
-                to="/#contact"
-                className="text-white px-4 py-2 hover:bg-studio-darkBlue"
+              
+              {/* Mobile Login Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center justify-center gap-1 mx-4 bg-white/10 hover:bg-white/20 text-white border-white/30"
                 onClick={toggleMenu}
               >
-                Contact
-              </Link>
+                <LogIn className="w-4 h-4" />
+                <span>Login</span>
+              </Button>
             </nav>
           </div>
         )}
