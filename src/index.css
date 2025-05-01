@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 196 85% 49%;  /* Studio Blue */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -33,22 +36,6 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
@@ -79,14 +66,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -96,6 +75,57 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Montserrat', sans-serif;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+/* Custom classes */
+@layer components {
+  .studio-title {
+    @apply text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight;
+  }
+  
+  .studio-section-title {
+    @apply text-2xl md:text-3xl font-bold relative pb-2 mb-6 inline-block;
+  }
+  
+  .studio-section-title:after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-1 bg-studio-blue rounded;
+  }
+
+  .navbar-link {
+    @apply relative font-medium text-lg transition-colors duration-300 ease-in-out;
+  }
+
+  .navbar-link:after {
+    content: '';
+    @apply absolute left-0 bottom-0 w-0 h-0.5 bg-current transition-all duration-300 ease-in-out;
+  }
+
+  .navbar-link:hover:after {
+    @apply w-full;
+  }
+
+  .feature-column {
+    @apply flex flex-col items-center p-4 transition-transform duration-300 hover:transform hover:scale-105;
+  }
+
+  .social-icon {
+    @apply w-8 h-8 text-white transition-all duration-300 hover:text-studio-lightBlue;
+  }
+}
+
+/* Animation for social bar */
+.social-bar-icon {
+  transition: transform 0.3s ease;
+}
+
+.social-bar-icon:hover {
+  transform: translateX(5px);
 }
