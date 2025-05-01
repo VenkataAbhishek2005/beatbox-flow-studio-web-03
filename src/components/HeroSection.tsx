@@ -45,9 +45,10 @@ const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
         <h1 className="studio-title mb-6">
-          <span className="text-white">BEAT</span>
-          <span className="text-studio-blue">BOX</span>
-          <span className="text-studio-red"> STUDIO</span>
+          <span className="text-white">BEATBOX</span>
+          <span className="text-studio-blue"> DANCE</span>
+          <span className="text-white"> &</span>
+          <span className="text-studio-red"> FITNESS STUDIO</span>
         </h1>
         
         <p className="text-white text-xl md:text-2xl max-w-3xl mb-8 animate-fade-in">
