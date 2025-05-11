@@ -9,8 +9,21 @@ import { Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import StudentTransactionsDialog from '@/components/admin/StudentTransactionsDialog';
 
-// Mock transaction data
-const mockTransactions = [
+// Define transaction type to match the interface in StudentTransactionsDialog
+interface Transaction {
+  id: string;
+  transactionId: string;
+  admissionNumber: string;
+  studentName: string;
+  amount: number;
+  status: 'paid' | 'unpaid';
+  date: Date;
+  month: number;
+  year: number;
+}
+
+// Mock transaction data with proper types
+const mockTransactions: Transaction[] = [
   {
     id: '1',
     transactionId: 'TX2023001',
@@ -62,13 +75,19 @@ const months = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+interface Student {
+  id: string;
+  admissionNumber: string;
+  studentName: string;
+}
+
 const Transactions: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all');
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // Filter transactions based on search query and filters
   const filteredTransactions = mockTransactions.filter(transaction => {
@@ -89,7 +108,7 @@ const Transactions: React.FC = () => {
     return matchesSearch && matchesStatus && matchesMonth;
   });
 
-  const handleToggleStatus = (transaction: any) => {
+  const handleToggleStatus = (transaction: Transaction) => {
     const newStatus = transaction.status === 'paid' ? 'unpaid' : 'paid';
     
     // This would connect to the backend API
@@ -99,11 +118,11 @@ const Transactions: React.FC = () => {
     });
   };
 
-  const handleRowClick = (student: any) => {
+  const handleRowClick = (transaction: Transaction) => {
     setSelectedStudent({
-      id: student.id,
-      admissionNumber: student.admissionNumber,
-      studentName: student.studentName
+      id: transaction.id,
+      admissionNumber: transaction.admissionNumber,
+      studentName: transaction.studentName
     });
     setDialogOpen(true);
   };
