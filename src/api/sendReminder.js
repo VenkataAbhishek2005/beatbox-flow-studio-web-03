@@ -1,35 +1,40 @@
 
-import twilio from 'twilio';
+/**
+ * This is a browser-compatible version of the send reminder function
+ * In a real application, this would make an API call to a backend service
+ */
 
 export const sendWhatsAppReminder = async (to, message) => {
   try {
-    // Initialize Twilio client with account credentials
-    const accountSid = process.env.TWILIO_ACCOUNT_SID || import.meta.env.VITE_TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN || import.meta.env.VITE_TWILIO_AUTH_TOKEN;
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER || import.meta.env.VITE_TWILIO_PHONE_NUMBER;
+    console.log(`Would send reminder to ${to} with message: ${message}`);
     
-    if (!accountSid || !authToken || !fromNumber) {
-      throw new Error('Twilio credentials not found');
-    }
-    
-    const client = twilio(accountSid, authToken);
-
-    // Format the 'to' number to ensure it's in the right format for WhatsApp
-    // Twilio WhatsApp requires the format: whatsapp:+{countryCode}{number}
-    const formattedTo = `whatsapp:${to}`;
-    const formattedFrom = `whatsapp:${fromNumber}`;
-    
-    // Send the message
-    const result = await client.messages.create({
-      body: message,
-      from: formattedFrom,
-      to: formattedTo
+    // Simulate API call to backend
+    // In a real application, this would be a fetch call to your backend API
+    const mockResponse = await new Promise(resolve => {
+      setTimeout(() => {
+        resolve({
+          sid: 'MOCK_' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+          status: 'queued',
+          to: to,
+          body: message
+        });
+      }, 1000); // Simulate network delay
     });
     
-    console.log(`Message sent with SID: ${result.sid}`);
-    return result;
+    console.log(`Mock message sent with SID: ${mockResponse.sid}`);
+    return mockResponse;
   } catch (error) {
     console.error('Error sending WhatsApp message:', error);
     throw error;
   }
 };
+
+// Add comment explaining the situation
+/**
+ * NOTE: The Twilio package cannot be used directly in browser environments.
+ * In a real production application, you would need to:
+ * 1. Create a server-side API endpoint that uses the Twilio SDK
+ * 2. Call that API endpoint from your client-side code
+ * 
+ * The implementation above is a mock version for client-side development and testing.
+ */
