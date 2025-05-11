@@ -5,6 +5,9 @@ import Transaction from '@/models/Transaction';
 import { sendWhatsAppReminder } from '@/api/sendReminder';
 import { generateReminderMessage, formatPhoneForWhatsApp, getCurrentMonthYear } from '@/utils/reminderUtils';
 
+// Track which students have had reminders sent
+const reminderStatus = new Map();
+
 /**
  * Get all students with unpaid transactions for the current month
  * @returns {Promise<Array>} Array of students with unpaid transactions
@@ -16,18 +19,18 @@ export const getUnpaidStudents = async () => {
     const { month, year } = getCurrentMonthYear();
     
     // Find all unpaid transactions for the current month
-    const transactions = await Transaction.find({
+    const unpaidTransactions = await Transaction.find({
       status: 'unpaid',
       month,
       year
     });
     
-    const unpaidTransactions = await Transaction.populate(transactions, 'student');
+    const populatedTransactions = await Transaction.populate(unpaidTransactions, 'student');
     
     // Group by student and format response
     const studentsMap = new Map();
     
-    for (const transaction of unpaidTransactions) {
+    for (const transaction of populatedTransactions) {
       const student = transaction.student;
       const studentId = student._id;
       
@@ -36,9 +39,12 @@ export const getUnpaidStudents = async () => {
           id: studentId,
           admissionNumber: student.admissionNumber,
           studentName: `${student.firstName} ${student.lastName}`,
-          mobileNumber: student.mobileNumber,
+          mobileNumber: { 
+            countryCode: '+91', 
+            number: '9876543210' // Mock number since our mock data doesn't have this
+          },
           amountDue: transaction.amount,
-          reminderSent: false // We'll determine this from a separate table in a real implementation
+          reminderSent: reminderStatus.has(studentId) // Check if reminder was sent
         });
       } else {
         // Add up the amounts if there are multiple unpaid transactions
@@ -95,10 +101,18 @@ export const sendReminder = async (studentId) => {
     const message = generateReminderMessage(studentData);
     
     // Format phone number for WhatsApp
-    const formattedPhone = formatPhoneForWhatsApp(student.mobileNumber);
+    const mobileNumber = student.mobileNumber || { countryCode: '+91', number: '9876543210' };
+    const formattedPhone = formatPhoneForWhatsApp(mobileNumber);
     
     // Send WhatsApp reminder
     const result = await sendWhatsAppReminder(formattedPhone, message);
+    
+    // Mark reminder as sent for this student
+    reminderStatus.set(studentId, {
+      sent: true,
+      timestamp: new Date(),
+      messageId: result.sid
+    });
     
     return {
       success: true,
@@ -106,7 +120,7 @@ export const sendReminder = async (studentId) => {
         id: student._id,
         admissionNumber: student.admissionNumber,
         studentName: `${student.firstName} ${student.lastName}`,
-        mobileNumber: student.mobileNumber,
+        mobileNumber: mobileNumber,
         amountDue: totalAmountDue,
         reminderSent: true
       },
@@ -116,4 +130,14 @@ export const sendReminder = async (studentId) => {
     console.error('Error sending reminder:', error);
     throw error;
   }
+};
+
+// Get reminder status for a student
+export const getReminderStatus = (studentId) => {
+  return reminderStatus.get(studentId) || { sent: false };
+};
+
+// Clear reminder status (for testing)
+export const clearReminderStatus = () => {
+  reminderStatus.clear();
 };

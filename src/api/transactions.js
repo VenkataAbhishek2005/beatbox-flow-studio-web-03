@@ -11,21 +11,27 @@ export const getAllTransactions = async () => {
   try {
     await connectToDatabase();
     
+    // Get all transactions
     const transactions = await Transaction.find();
+    
+    // Populate student data
     const populatedTransactions = await Transaction.populate(transactions, 'student');
     
     // Format transactions to match the frontend expected structure
-    return populatedTransactions.map(transaction => ({
-      id: transaction._id,
-      transactionId: transaction._id.substring(0, 8).toUpperCase(),
-      admissionNumber: transaction.student.admissionNumber,
-      studentName: `${transaction.student.firstName} ${transaction.student.lastName}`,
-      amount: transaction.amount,
-      status: transaction.status,
-      date: transaction.date,
-      month: transaction.month,
-      year: transaction.year
-    }));
+    return populatedTransactions.map(transaction => {
+      const student = transaction.student;
+      return {
+        id: transaction._id,
+        transactionId: transaction._id.substring(0, 8).toUpperCase(),
+        admissionNumber: student.admissionNumber,
+        studentName: `${student.firstName} ${student.lastName}`,
+        amount: transaction.amount,
+        status: transaction.status,
+        date: transaction.date,
+        month: transaction.month,
+        year: transaction.year
+      };
+    });
   } catch (error) {
     console.error('Error getting transactions:', error);
     throw error;
@@ -66,6 +72,9 @@ export const getStudentTransactions = async (admissionNumber) => {
   }
 };
 
+// Mock transaction storage for newly created transactions
+const newTransactions = [];
+
 /**
  * Create a new transaction
  * @param {Object} transactionData - Transaction data
@@ -95,8 +104,8 @@ export const createTransaction = async (transactionData) => {
       year
     };
     
-    // In a real implementation, this would save to the database
-    // For now, we'll just return the formatted transaction
+    // Add to our mock storage
+    newTransactions.push(newTransaction);
     
     return {
       id: newTransaction._id,
@@ -125,13 +134,30 @@ export const updateTransactionStatus = async (id, status) => {
   try {
     await connectToDatabase();
     
-    const transaction = await Transaction.findById(id);
+    // Find in main transactions
+    let transaction = await Transaction.findById(id);
+    let isNewTransaction = false;
+    
+    // If not found in main transactions, check new transactions
     if (!transaction) {
-      throw new Error(`Transaction with ID ${id} not found`);
+      transaction = newTransactions.find(t => t._id === id);
+      isNewTransaction = true;
+      
+      if (!transaction) {
+        throw new Error(`Transaction with ID ${id} not found`);
+      }
     }
     
-    // Update status (mock implementation)
-    transaction.status = status;
+    // Update status
+    if (isNewTransaction) {
+      // Update in new transactions array
+      const index = newTransactions.findIndex(t => t._id === id);
+      newTransactions[index] = { ...newTransactions[index], status };
+      transaction = newTransactions[index];
+    } else {
+      // Update mock transaction (this is just for the browser environment)
+      transaction.status = status;
+    }
     
     const student = await Student.findById(transaction.student);
     
@@ -150,4 +176,12 @@ export const updateTransactionStatus = async (id, status) => {
     console.error('Error updating transaction status:', error);
     throw error;
   }
+};
+
+// Get all transactions (including new ones) - for debugging
+export const getAllTransactionsRaw = () => {
+  return { 
+    main: Transaction.transactions,
+    new: newTransactions
+  };
 };
