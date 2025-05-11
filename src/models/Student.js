@@ -72,7 +72,14 @@ const StudentSchema = new mongoose.Schema({
   }
 });
 
-// Check if the model has been compiled already
-const Student = mongoose.models.Student || mongoose.model('Student', StudentSchema);
+// Fix the model creation to avoid the error with mongoose.models being undefined
+let Student;
+try {
+  // Check if model already exists
+  Student = mongoose.model('Student');
+} catch (error) {
+  // Model doesn't exist, create it
+  Student = mongoose.model('Student', StudentSchema);
+}
 
 export default Student;
