@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,22 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Plus } from 'lucide-react';
 import { DialogDescription } from '@radix-ui/react-dialog';
-
-interface Transaction {
-  id: string;
-  transactionId: string;
-  amount: number;
-  status: 'paid' | 'unpaid';
-  date: Date;
-  month: number;
-  year: number;
-}
-
-interface Student {
-  id: string;
-  admissionNumber: string;
-  studentName: string;
-}
+import { Transaction, Student, months } from '@/types/transaction';
 
 interface StudentTransactionsDialogProps {
   isOpen: boolean;
@@ -30,11 +15,6 @@ interface StudentTransactionsDialogProps {
   student: Student | null;
   transactions: Transaction[];
 }
-
-const months = [
-  'January', 'February', 'March', 'April', 'May', 'June', 
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
 
 const StudentTransactionsDialog: React.FC<StudentTransactionsDialogProps> = ({
   isOpen,
