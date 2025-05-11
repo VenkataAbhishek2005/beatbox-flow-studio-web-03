@@ -1,15 +1,14 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/admin/SearchBar';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash, Image, UserPlus } from 'lucide-react';
+import { Plus, Pencil, Trash, Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Mock instructor data
 const mockInstructors = [
@@ -17,35 +16,41 @@ const mockInstructors = [
     id: '1',
     name: 'Rajesh Kumar',
     photo: '/placeholder.svg',
-    danceTypes: ['WESTERN', 'HIP-HOP'],
-    bio: 'Experienced hip-hop and western dance instructor with 8+ years of teaching experience.',
-    contactInfo: {
+    danceTypes: ['Hip-Hop', 'Contemporary'],
+    bio: 'Professional dancer with 10 years of experience in Hip-Hop and Contemporary dance styles.',
+    contact: {
       email: 'rajesh@example.com',
-      phone: '+91 9876543210'
+      phone: '+91 98765 43210'
     }
   },
   {
     id: '2',
     name: 'Meera Sharma',
     photo: '/placeholder.svg',
-    danceTypes: ['CLASSICAL', 'BHARATANATYAM'],
-    bio: 'Classically trained Bharatanatyam dancer with 12 years of experience and formal certification.',
-    contactInfo: {
+    danceTypes: ['Bharatanatyam', 'Kathak'],
+    bio: 'Classical dance expert specializing in Bharatanatyam and Kathak with over 15 years of experience.',
+    contact: {
       email: 'meera@example.com',
-      phone: '+91 8765432109'
+      phone: '+91 87654 32109'
     }
   },
   {
     id: '3',
     name: 'Arjun Singh',
     photo: '/placeholder.svg',
-    danceTypes: ['CONTEMPORARY', 'WESTERN'],
-    bio: 'Contemporary dance specialist who has performed internationally and taught students of all ages.',
-    contactInfo: {
+    danceTypes: ['Breaking', 'Popping'],
+    bio: 'Specialized in street dance styles including Breaking and Popping. Has won multiple national competitions.',
+    contact: {
       email: 'arjun@example.com',
-      phone: '+91 7654321098'
+      phone: '+91 76543 21098'
     }
-  }
+  },
+];
+
+// Available dance types for selection
+const availableDanceTypes = [
+  'Hip-Hop', 'Contemporary', 'Bharatanatyam', 'Kathak', 
+  'Breaking', 'Popping', 'Ballet', 'Jazz', 'Salsa'
 ];
 
 const EditInstructors: React.FC = () => {
@@ -54,15 +59,13 @@ const EditInstructors: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentInstructor, setCurrentInstructor] = useState<any>(null);
-  const [danceTypeInput, setDanceTypeInput] = useState('');
+  const [selectedDanceTypes, setSelectedDanceTypes] = useState<string[]>([]);
   const { toast } = useToast();
 
   // Filter instructors based on search query
   const filteredInstructors = instructors.filter(instructor => 
     instructor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    instructor.danceTypes.some(type => 
-      type.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    instructor.danceTypes.some(type => type.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Open dialog for adding a new instructor
@@ -72,11 +75,9 @@ const EditInstructors: React.FC = () => {
       photo: '/placeholder.svg',
       danceTypes: [],
       bio: '',
-      contactInfo: {
-        email: '',
-        phone: ''
-      }
+      contact: { email: '', phone: '' }
     });
+    setSelectedDanceTypes([]);
     setIsEditMode(false);
     setIsDialogOpen(true);
   };
@@ -84,6 +85,7 @@ const EditInstructors: React.FC = () => {
   // Open dialog for editing an existing instructor
   const handleEditInstructor = (instructor: any) => {
     setCurrentInstructor({ ...instructor });
+    setSelectedDanceTypes([...instructor.danceTypes]);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
@@ -97,7 +99,7 @@ const EditInstructors: React.FC = () => {
       
       toast({
         title: "Instructor Deleted",
-        description: "The instructor has been successfully deleted.",
+        description: "The instructor has been successfully removed.",
       });
     }
   };
@@ -106,30 +108,35 @@ const EditInstructors: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const updatedInstructor = {
+      ...currentInstructor,
+      danceTypes: selectedDanceTypes
+    };
+    
     if (isEditMode) {
       // Update existing instructor
       const updatedInstructors = instructors.map(instructor => 
         instructor.id === currentInstructor.id 
-          ? currentInstructor
+          ? updatedInstructor 
           : instructor
       );
       setInstructors(updatedInstructors);
       
       toast({
         title: "Instructor Updated",
-        description: `${currentInstructor.name}'s information has been updated.`,
+        description: `Instructor "${currentInstructor.name}" has been updated.`,
       });
     } else {
       // Add new instructor
       const newInstructor = {
         id: Date.now().toString(),
-        ...currentInstructor,
+        ...updatedInstructor,
       };
       setInstructors([...instructors, newInstructor]);
       
       toast({
         title: "Instructor Added",
-        description: `${currentInstructor.name} has been added as an instructor.`,
+        description: `Instructor "${currentInstructor.name}" has been added.`,
       });
     }
     
@@ -139,6 +146,7 @@ const EditInstructors: React.FC = () => {
   // Update current instructor state when form fields change
   const handleInputChange = (field: string, value: string) => {
     if (field.includes('.')) {
+      // Handle nested fields like 'contact.email'
       const [parent, child] = field.split('.');
       setCurrentInstructor({
         ...currentInstructor,
@@ -155,23 +163,13 @@ const EditInstructors: React.FC = () => {
     }
   };
 
-  // Add dance type to instructor
-  const handleAddDanceType = () => {
-    if (danceTypeInput && !currentInstructor.danceTypes.includes(danceTypeInput)) {
-      setCurrentInstructor({
-        ...currentInstructor,
-        danceTypes: [...currentInstructor.danceTypes, danceTypeInput]
-      });
-      setDanceTypeInput('');
+  // Toggle dance type selection
+  const toggleDanceType = (type: string) => {
+    if (selectedDanceTypes.includes(type)) {
+      setSelectedDanceTypes(selectedDanceTypes.filter(t => t !== type));
+    } else {
+      setSelectedDanceTypes([...selectedDanceTypes, type]);
     }
-  };
-
-  // Remove dance type from instructor
-  const handleRemoveDanceType = (type: string) => {
-    setCurrentInstructor({
-      ...currentInstructor,
-      danceTypes: currentInstructor.danceTypes.filter((t: string) => t !== type)
-    });
   };
 
   return (
@@ -187,77 +185,90 @@ const EditInstructors: React.FC = () => {
 
       <div className="flex justify-end">
         <Button onClick={handleAddInstructor} className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add Instructor
         </Button>
       </div>
       
-      {/* Instructors Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredInstructors.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            No instructors found
-          </div>
-        ) : (
-          filteredInstructors.map((instructor) => (
-            <Card key={instructor.id} className="overflow-hidden">
-              <div className="h-48 bg-gray-100 flex items-center justify-center">
-                <img 
-                  src={instructor.photo} 
-                  alt={instructor.name}
-                  className="max-h-full object-cover"
-                />
-              </div>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold">{instructor.name}</h3>
-                    <div className="flex flex-wrap gap-1 mt-2">
+      {/* Instructors Table */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[80px]">Photo</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Dance Types</TableHead>
+              <TableHead>Contact Information</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredInstructors.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No instructors found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredInstructors.map((instructor) => (
+                <TableRow key={instructor.id}>
+                  <TableCell>
+                    <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+                      <img 
+                        src={instructor.photo} 
+                        alt={instructor.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{instructor.name}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
                       {instructor.danceTypes.map((type, index) => (
-                        <Badge key={index} variant="outline">
+                        <span 
+                          key={index}
+                          className="bg-studio-blue bg-opacity-10 text-studio-blue text-xs px-2 py-1 rounded-full"
+                        >
                           {type}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEditInstructor(instructor)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-red-500 hover:text-red-600"
-                      onClick={() => handleDeleteInstructor(instructor.id)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                  {instructor.bio}
-                </p>
-                <div className="space-y-1 text-sm">
-                  <p>
-                    <span className="font-medium">Email:</span> {instructor.contactInfo.email}
-                  </p>
-                  <p>
-                    <span className="font-medium">Phone:</span> {instructor.contactInfo.phone}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <p>{instructor.contact.email}</p>
+                      <p>{instructor.contact.phone}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditInstructor(instructor)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-red-500 hover:text-red-600"
+                        onClick={() => handleDeleteInstructor(instructor.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Add/Edit Instructor Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Edit Instructor" : "Add New Instructor"}
@@ -266,80 +277,61 @@ const EditInstructors: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Instructor Name*</Label>
+                <Label>Instructor Photo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="h-20 w-20 rounded-full overflow-hidden bg-gray-100">
+                    <img 
+                      src={currentInstructor?.photo || '/placeholder.svg'} 
+                      alt="Instructor"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <Button type="button" variant="outline" className="flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    Upload Photo
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name*</Label>
                 <Input
                   id="name"
                   value={currentInstructor?.name || ''}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter instructor name"
+                  placeholder="Enter instructor's full name"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label>Upload Photo</Label>
-                <div className="flex items-center gap-4">
-                  <div className="h-20 w-20 border rounded flex items-center justify-center bg-gray-100">
-                    {currentInstructor?.photo && (
-                      <img 
-                        src={currentInstructor.photo} 
-                        alt="Instructor" 
-                        className="max-h-full max-w-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <Button type="button" variant="outline" className="flex items-center gap-2">
-                    <Image className="h-4 w-4" />
-                    Choose Image
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Recommended size: 300x300 px. Max size: 2MB
-                </p>
-              </div>
-              
-              <div className="space-y-2">
                 <Label>Dance Types*</Label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {currentInstructor?.danceTypes.map((type: string, index: number) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1">
-                      {type}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-4 w-4 p-0 ml-1 text-muted-foreground hover:text-foreground"
-                        onClick={() => handleRemoveDanceType(type)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
+                <div className="grid grid-cols-3 gap-2">
+                  {availableDanceTypes.map((type, index) => (
+                    <div key={index} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`dance-type-${index}`}
+                        checked={selectedDanceTypes.includes(type)}
+                        onChange={() => toggleDanceType(type)}
+                        className="mr-2"
+                      />
+                      <Label htmlFor={`dance-type-${index}`} className="cursor-pointer text-sm">
+                        {type}
+                      </Label>
+                    </div>
                   ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add dance type"
-                    value={danceTypeInput}
-                    onChange={(e) => setDanceTypeInput(e.target.value)}
-                  />
-                  <Button 
-                    type="button" 
-                    onClick={handleAddDanceType}
-                    variant="outline"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="bio">Bio</Label>
-                <Textarea
+                <textarea
                   id="bio"
                   value={currentInstructor?.bio || ''}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
-                  placeholder="Enter instructor bio"
-                  className="min-h-[100px]"
+                  placeholder="Enter instructor's bio and experience"
+                  className="w-full min-h-[100px] px-3 py-2 border rounded-md"
                 />
               </div>
               
@@ -349,19 +341,20 @@ const EditInstructors: React.FC = () => {
                   <Input
                     id="email"
                     type="email"
-                    value={currentInstructor?.contactInfo?.email || ''}
-                    onChange={(e) => handleInputChange('contactInfo.email', e.target.value)}
-                    placeholder="Enter email address"
+                    value={currentInstructor?.contact?.email || ''}
+                    onChange={(e) => handleInputChange('contact.email', e.target.value)}
+                    placeholder="Email address"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number*</Label>
                   <Input
                     id="phone"
-                    value={currentInstructor?.contactInfo?.phone || ''}
-                    onChange={(e) => handleInputChange('contactInfo.phone', e.target.value)}
-                    placeholder="Enter phone number"
+                    value={currentInstructor?.contact?.phone || ''}
+                    onChange={(e) => handleInputChange('contact.phone', e.target.value)}
+                    placeholder="Phone number with country code"
+                    required
                   />
                 </div>
               </div>
