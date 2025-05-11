@@ -4,19 +4,31 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, X } from 'lucide-react';
-import { Transaction, Student, months } from '@/types/transaction';
+import { Transaction, months } from '@/types/transaction';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
   onToggleStatus: (transaction: Transaction) => void;
   onRowClick: (transaction: Transaction) => void;
+  loading?: boolean;
 }
 
 const TransactionsTable: React.FC<TransactionsTableProps> = ({
   transactions,
   onToggleStatus,
-  onRowClick
+  onRowClick,
+  loading = false
 }) => {
+  if (loading) {
+    return (
+      <div className="rounded-md border">
+        <div className="flex justify-center items-center h-48">
+          <div className="text-muted-foreground">Loading transactions...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-md border">
       <Table>

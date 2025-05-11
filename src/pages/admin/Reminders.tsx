@@ -1,44 +1,40 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/admin/SearchBar';
 import { useToast } from '@/hooks/use-toast';
 import { Send } from 'lucide-react';
-
-// Mock data of students with unpaid transactions
-const mockUnpaidStudents = [
-  {
-    id: '1',
-    admissionNumber: 'BB2023001',
-    studentName: 'Rahul Sharma',
-    mobileNumber: { countryCode: '+91', number: '9876543210' },
-    amountDue: 1500,
-    reminderSent: false,
-  },
-  {
-    id: '2',
-    admissionNumber: 'BB2023003',
-    studentName: 'Aryan Singh',
-    mobileNumber: { countryCode: '+91', number: '7654321098' },
-    amountDue: 1500,
-    reminderSent: true,
-  },
-  {
-    id: '3',
-    admissionNumber: 'BB2023005',
-    studentName: 'Sneha Gupta',
-    mobileNumber: { countryCode: '+91', number: '8765432101' },
-    amountDue: 1800,
-    reminderSent: false,
-  }
-];
+import { getUnpaidStudents, sendReminder } from '@/api/reminders';
 
 const Reminders: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [students, setStudents] = useState(mockUnpaidStudents);
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+
+  // Fetch unpaid students on component mount
+  useEffect(() => {
+    const fetchUnpaidStudents = async () => {
+      try {
+        setLoading(true);
+        const data = await getUnpaidStudents();
+        setStudents(data);
+      } catch (error) {
+        console.error('Error fetching unpaid students:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load students with unpaid fees. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUnpaidStudents();
+  }, [toast]);
 
   // Filter students based on search query
   const filteredStudents = students.filter(student => 
@@ -46,18 +42,13 @@ const Reminders: React.FC = () => {
     student.studentName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Send reminder to a single student using Twilio
-  const sendReminder = async (student: any) => {
+  // Send reminder to a single student
+  const handleSendReminder = async (student: any) => {
     // Set sending state for this student
     setSending(prev => ({ ...prev, [student.id]: true }));
     
     try {
-      // This would connect to the backend API / Twilio API
-      // In a real implementation, you'd make an API call to your backend
-      // which would then use Twilio to send the message
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await sendReminder(student.id);
       
       // Update student's reminder status
       const updatedStudents = students.map(s => 
@@ -70,6 +61,7 @@ const Reminders: React.FC = () => {
         description: `Reminder sent to ${student.studentName} via WhatsApp`,
       });
     } catch (error) {
+      console.error('Error sending reminder:', error);
       toast({
         title: "Error",
         description: "Failed to send reminder",
@@ -92,8 +84,12 @@ const Reminders: React.FC = () => {
     setSending(allSending);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Send reminders one by one
+      for (const student of students) {
+        if (!student.reminderSent) {
+          await sendReminder(student.id);
+        }
+      }
       
       // Update all students' reminder status
       const updatedStudents = students.map(student => ({ 
@@ -104,9 +100,10 @@ const Reminders: React.FC = () => {
       
       toast({
         title: "All Reminders Sent",
-        description: `Reminders sent to all ${students.length} students via WhatsApp`,
+        description: `Reminders sent to all students with unpaid fees`,
       });
     } catch (error) {
+      console.error('Error sending reminders to all students:', error);
       toast({
         title: "Error",
         description: "Failed to send reminders to all students",
@@ -135,7 +132,7 @@ const Reminders: React.FC = () => {
         <Button 
           onClick={sendAllReminders}
           className="flex items-center gap-2"
-          disabled={Object.keys(sending).length > 0}
+          disabled={Object.keys(sending).length > 0 || loading}
         >
           <Send className="h-4 w-4" />
           Send All Reminders
@@ -156,7 +153,13 @@ const Reminders: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredStudents.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Loading students with unpaid fees...
+                </TableCell>
+              </TableRow>
+            ) : filteredStudents.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No students with unpaid fees
@@ -182,7 +185,7 @@ const Reminders: React.FC = () => {
                     <Button
                       size="sm"
                       variant={student.reminderSent ? "secondary" : "default"}
-                      onClick={() => sendReminder(student)}
+                      onClick={() => handleSendReminder(student)}
                       disabled={student.reminderSent || sending[student.id]}
                       className={!student.reminderSent ? "bg-blue-500 hover:bg-blue-600" : ""}
                     >

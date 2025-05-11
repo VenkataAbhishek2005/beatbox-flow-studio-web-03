@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,38 +8,71 @@ import { Badge } from '@/components/ui/badge';
 import { Check, X, Plus } from 'lucide-react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { Transaction, Student, months } from '@/types/transaction';
+import { createTransaction } from '@/api/transactions';
 
 interface StudentTransactionsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   student: Student | null;
   transactions: Transaction[];
+  onToggleStatus: (transaction: Transaction) => void;
+  loading?: boolean;
 }
 
 const StudentTransactionsDialog: React.FC<StudentTransactionsDialogProps> = ({
   isOpen,
   onClose,
   student,
-  transactions
+  transactions,
+  onToggleStatus,
+  loading = false
 }) => {
   const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [adding, setAdding] = useState(false);
   
-  const handleToggleStatus = (transaction: Transaction) => {
-    const newStatus = transaction.status === 'paid' ? 'unpaid' : 'paid';
-    
-    // This would connect to the backend API
-    toast({
-      title: "Status Updated",
-      description: `Transaction ${transaction.transactionId} marked as ${newStatus}`,
-    });
-  };
+  const handleAddTransaction = async () => {
+    if (!student || !amount || !selectedMonth) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const handleAddTransaction = () => {
-    // This would open a form to add a new transaction
-    toast({
-      title: "Add Transaction",
-      description: "Add transaction functionality will be implemented soon.",
-    });
+    try {
+      setAdding(true);
+      const currentDate = new Date();
+      const newTransaction = await createTransaction({
+        admissionNumber: student.admissionNumber,
+        amount: parseFloat(amount),
+        month: parseInt(selectedMonth),
+        year: currentDate.getFullYear()
+      });
+
+      toast({
+        title: "Transaction Added",
+        description: `New transaction created for ${student.studentName}`,
+      });
+
+      // Reset form
+      setShowAddForm(false);
+      setAmount('');
+      setSelectedMonth('');
+      
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add transaction. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setAdding(false);
+    }
   };
 
   if (!student) return null;
@@ -55,12 +88,62 @@ const StudentTransactionsDialog: React.FC<StudentTransactionsDialogProps> = ({
         </DialogHeader>
         
         <div className="flex justify-end mb-4">
-          <Button onClick={handleAddTransaction} className="flex items-center gap-2">
+          <Button onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Add Transaction
+            {showAddForm ? 'Cancel' : 'Add Transaction'}
           </Button>
         </div>
+
+        {/* Add Transaction Form */}
+        {showAddForm && (
+          <div className="mb-6 p-4 border rounded-md bg-muted/50">
+            <h3 className="text-lg font-medium mb-4">Add New Transaction</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="amount" className="text-sm font-medium">
+                  Amount (₹)
+                </label>
+                <input
+                  id="amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  placeholder="Enter amount"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="month" className="text-sm font-medium">
+                  Month
+                </label>
+                <select
+                  id="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Select Month</option>
+                  {months.map((month, index) => (
+                    <option key={index} value={(index + 1).toString()}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button 
+                onClick={handleAddTransaction} 
+                disabled={!amount || !selectedMonth || adding}
+                className="bg-green-500 hover:bg-green-600"
+              >
+                {adding ? 'Adding...' : 'Add Transaction'}
+              </Button>
+            </div>
+          </div>
+        )}
         
+        {/* Transactions Table */}
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -73,7 +156,13 @@ const StudentTransactionsDialog: React.FC<StudentTransactionsDialogProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    Loading transactions...
+                  </TableCell>
+                </TableRow>
+              ) : transactions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     No transactions found
@@ -100,7 +189,7 @@ const StudentTransactionsDialog: React.FC<StudentTransactionsDialogProps> = ({
                         size="sm"
                         variant={transaction.status === 'unpaid' ? 'default' : 'secondary'}
                         className={transaction.status === 'unpaid' ? 'bg-green-500 hover:bg-green-600' : 'bg-yellow-500 hover:bg-yellow-600'}
-                        onClick={() => handleToggleStatus(transaction)}
+                        onClick={() => onToggleStatus(transaction)}
                       >
                         {transaction.status === 'unpaid' ? (
                           <><Check className="h-4 w-4 mr-1" /> Mark Paid</>
