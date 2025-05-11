@@ -10,16 +10,11 @@ export const connectToDatabase = async () => {
   }
 
   try {
-    const uri = import.meta.env.VITE_MONGO_URI || process.env.MONGO_URI;
-    
-    if (!uri) {
-      throw new Error('MongoDB URI not found in environment variables');
-    }
-
-    await mongoose.connect(uri);
-    
+    // For browser environment, use mock connection
+    // In a real app, this would connect to a backend API that connects to MongoDB
+    console.log('Setting up mock MongoDB connection for browser environment');
     isConnected = true;
-    console.log('MongoDB connected successfully');
+    return;
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
   }

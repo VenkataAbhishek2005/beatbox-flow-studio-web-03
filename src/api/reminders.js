@@ -16,18 +16,20 @@ export const getUnpaidStudents = async () => {
     const { month, year } = getCurrentMonthYear();
     
     // Find all unpaid transactions for the current month
-    const unpaidTransactions = await Transaction.find({
+    const transactions = await Transaction.find({
       status: 'unpaid',
       month,
       year
-    }).populate('student');
+    });
+    
+    const unpaidTransactions = await Transaction.populate(transactions, 'student');
     
     // Group by student and format response
     const studentsMap = new Map();
     
     for (const transaction of unpaidTransactions) {
       const student = transaction.student;
-      const studentId = student._id.toString();
+      const studentId = student._id;
       
       if (!studentsMap.has(studentId)) {
         studentsMap.set(studentId, {
@@ -101,7 +103,7 @@ export const sendReminder = async (studentId) => {
     return {
       success: true,
       student: {
-        id: student._id.toString(),
+        id: student._id,
         admissionNumber: student.admissionNumber,
         studentName: `${student.firstName} ${student.lastName}`,
         mobileNumber: student.mobileNumber,

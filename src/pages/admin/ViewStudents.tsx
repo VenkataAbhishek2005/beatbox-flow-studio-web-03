@@ -1,12 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SearchBar from '@/components/admin/SearchBar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
-// Mock student data
+// Mock student data (this would come from API in a real app)
 const mockStudents = [
   {
     id: '1',
@@ -17,6 +20,10 @@ const mockStudents = [
     gender: 'male',
     danceTypes: ['WESTERN', 'HIP-HOP'],
     batchNo: 2,
+    colony: 'Green Park',
+    area: 'South Delhi',
+    city: 'Delhi',
+    postalCode: 110016,
     parentName: 'Suresh Sharma',
     mobileNumber: { countryCode: '+91', number: '9876543210' },
     classFee: 1500,
@@ -31,6 +38,10 @@ const mockStudents = [
     gender: 'female',
     danceTypes: ['CLASSICAL', 'BHARATANATYAM'],
     batchNo: 1,
+    colony: 'Vasant Kunj',
+    area: 'South West Delhi',
+    city: 'Delhi',
+    postalCode: 110070,
     parentName: 'Amit Patel',
     mobileNumber: { countryCode: '+91', number: '8765432109' },
     classFee: 1800,
@@ -45,6 +56,10 @@ const mockStudents = [
     gender: 'male',
     danceTypes: ['WESTERN'],
     batchNo: 3,
+    colony: 'Dwarka',
+    area: 'West Delhi',
+    city: 'Delhi',
+    postalCode: 110075,
     parentName: 'Rajesh Singh',
     mobileNumber: { countryCode: '+91', number: '7654321098' },
     classFee: 1500,
@@ -54,11 +69,15 @@ const mockStudents = [
 
 const ViewStudents: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [students, setStudents] = useState(mockStudents);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedStudent, setEditedStudent] = useState<any>(null);
+  const { toast } = useToast();
 
   // Filter students based on search query
-  const filteredStudents = mockStudents.filter(student => 
+  const filteredStudents = students.filter(student => 
     student.admissionNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
     `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -66,18 +85,54 @@ const ViewStudents: React.FC = () => {
   const handleRowClick = (student: any) => {
     setSelectedStudent(student);
     setIsDialogOpen(true);
+    setIsEditMode(false);
   };
 
   const handleEdit = () => {
-    alert('Edit functionality will be implemented with backend integration');
-    setIsDialogOpen(false);
+    setEditedStudent({...selectedStudent});
+    setIsEditMode(true);
+  };
+
+  const handleSaveEdit = () => {
+    // Update the student in the list
+    const updatedStudents = students.map(student => 
+      student.id === editedStudent.id ? editedStudent : student
+    );
+    
+    setStudents(updatedStudents);
+    setSelectedStudent(editedStudent);
+    setIsEditMode(false);
+    
+    toast({
+      title: "Success",
+      description: "Student information updated successfully",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditedStudent(null);
   };
 
   const handleRemove = () => {
     if (window.confirm(`Are you sure you want to delete ${selectedStudent.firstName} ${selectedStudent.lastName}?`)) {
-      alert('Remove functionality will be implemented with backend integration');
+      // Remove student from the list
+      const updatedStudents = students.filter(student => student.id !== selectedStudent.id);
+      setStudents(updatedStudents);
       setIsDialogOpen(false);
+      
+      toast({
+        title: "Success",
+        description: "Student removed successfully",
+      });
     }
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setEditedStudent({
+      ...editedStudent,
+      [field]: value
+    });
   };
 
   return (
@@ -140,10 +195,10 @@ const ViewStudents: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Student Details</DialogTitle>
+            <DialogTitle>{isEditMode ? "Edit Student" : "Student Details"}</DialogTitle>
           </DialogHeader>
 
-          {selectedStudent && (
+          {selectedStudent && !isEditMode && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
@@ -213,6 +268,129 @@ const ViewStudents: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Edit Form */}
+          {selectedStudent && isEditMode && editedStudent && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Personal Information</h3>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input 
+                        id="firstName" 
+                        value={editedStudent.firstName} 
+                        onChange={(e) => handleInputChange('firstName', e.target.value)} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input 
+                        id="lastName" 
+                        value={editedStudent.lastName} 
+                        onChange={(e) => handleInputChange('lastName', e.target.value)} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <select 
+                        id="status"
+                        className="w-full p-2 border rounded"
+                        value={editedStudent.status}
+                        onChange={(e) => handleInputChange('status', e.target.value)}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold">Dance Information</h3>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label htmlFor="batchNo">Batch Number</Label>
+                      <Input 
+                        id="batchNo"
+                        type="number" 
+                        value={editedStudent.batchNo} 
+                        onChange={(e) => handleInputChange('batchNo', parseInt(e.target.value))} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Contact Information</h3>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label htmlFor="parentName">Parent Name</Label>
+                      <Input 
+                        id="parentName" 
+                        value={editedStudent.parentName} 
+                        onChange={(e) => handleInputChange('parentName', e.target.value)} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="mobileNumber">Mobile Number</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="countryCode"
+                          className="w-20"
+                          value={editedStudent.mobileNumber.countryCode} 
+                          onChange={(e) => handleInputChange('mobileNumber', {...editedStudent.mobileNumber, countryCode: e.target.value})} 
+                        />
+                        <Input 
+                          id="number" 
+                          value={editedStudent.mobileNumber.number} 
+                          onChange={(e) => handleInputChange('mobileNumber', {...editedStudent.mobileNumber, number: e.target.value})} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold">Fee Details</h3>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label htmlFor="classFee">Class Fee (₹)</Label>
+                      <Input 
+                        id="classFee" 
+                        type="number"
+                        value={editedStudent.classFee} 
+                        onChange={(e) => handleInputChange('classFee', parseInt(e.target.value))} 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="costumeFee">Costume Fee (₹)</Label>
+                      <Input 
+                        id="costumeFee" 
+                        type="number"
+                        value={editedStudent.costumeFee} 
+                        onChange={(e) => handleInputChange('costumeFee', parseInt(e.target.value))} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isEditMode && (
+            <DialogFooter className="flex justify-end gap-2 mt-6">
+              <Button variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                Save Changes
+              </Button>
+            </DialogFooter>
           )}
         </DialogContent>
       </Dialog>

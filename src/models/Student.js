@@ -1,85 +1,94 @@
 
-import mongoose from 'mongoose';
+// Mock Student model for browser environment
+// In a real app with proper backend, this would use actual Mongoose
 
-const StudentSchema = new mongoose.Schema({
-  admissionNumber: { 
-    type: String, 
-    required: true, 
-    unique: true 
+// Mock data storage
+const students = [
+  {
+    _id: '1',
+    admissionNumber: 'BB2023001',
+    firstName: 'Rahul',
+    lastName: 'Sharma',
+    dob: new Date('2005-05-15'),
+    gender: 'male',
+    danceTypes: ['WESTERN', 'HIP-HOP'],
+    batchNo: 2,
+    colony: 'Green Park',
+    area: 'South Delhi',
+    city: 'Delhi',
+    postalCode: 110016,
+    parentName: 'Suresh Sharma',
+    mobileNumber: { countryCode: '+91', number: '9876543210' },
+    designation: 'Student',
+    email: 'rahul.sharma@example.com',
+    classFee: 1500,
+    costumeFee: 2000,
+    isActive: true,
+    createdAt: new Date('2023-01-15'),
+    updatedAt: new Date('2023-01-15')
   },
-  firstName: { 
-    type: String, 
-    required: true 
+  {
+    _id: '2',
+    admissionNumber: 'BB2023002',
+    firstName: 'Priya',
+    lastName: 'Patel',
+    dob: new Date('2006-07-25'),
+    gender: 'female',
+    danceTypes: ['CLASSICAL', 'BHARATANATYAM'],
+    batchNo: 1,
+    colony: 'Vasant Kunj',
+    area: 'South West Delhi',
+    city: 'Delhi',
+    postalCode: 110070,
+    parentName: 'Amit Patel',
+    mobileNumber: { countryCode: '+91', number: '8765432109' },
+    designation: 'Student',
+    email: 'priya.patel@example.com',
+    classFee: 1800,
+    costumeFee: 2500,
+    isActive: true,
+    createdAt: new Date('2023-02-10'),
+    updatedAt: new Date('2023-02-10')
   },
-  lastName: { 
-    type: String, 
-    required: true 
-  },
-  dob: { 
-    type: Date, 
-    required: true 
-  },
-  gender: { 
-    type: String, 
-    required: true, 
-    enum: ['male', 'female'] 
-  },
-  danceTypes: { 
-    type: [String], 
-    required: true 
-  },
-  batchNo: { 
-    type: Number, 
-    required: true 
-  },
-  colony: String,
-  area: String,
-  city: String,
-  postalCode: Number,
-  parentName: String,
-  mobileNumber: {
-    countryCode: { 
-      type: String, 
-      default: '+91' 
-    },
-    number: { 
-      type: String, 
-      required: true 
-    }
-  },
-  designation: String,
-  email: String,
-  classFee: { 
-    type: Number, 
-    required: true 
-  },
-  costumeFee: { 
-    type: Number, 
-    required: true 
-  },
-  isActive: { 
-    type: Boolean, 
-    required: true, 
-    default: true 
-  },
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  },
-  updatedAt: { 
-    type: Date, 
-    default: Date.now 
+  {
+    _id: '3',
+    admissionNumber: 'BB2023003',
+    firstName: 'Aryan',
+    lastName: 'Singh',
+    dob: new Date('2007-03-12'),
+    gender: 'male',
+    danceTypes: ['WESTERN'],
+    batchNo: 3,
+    colony: 'Dwarka',
+    area: 'West Delhi',
+    city: 'Delhi',
+    postalCode: 110075,
+    parentName: 'Rajesh Singh',
+    mobileNumber: { countryCode: '+91', number: '7654321098' },
+    designation: 'Student',
+    email: 'aryan.singh@example.com',
+    classFee: 1500,
+    costumeFee: 2000,
+    isActive: false,
+    createdAt: new Date('2023-03-05'),
+    updatedAt: new Date('2023-04-15')
   }
-});
+];
 
-// Fix the model creation to avoid the error with mongoose.models being undefined
-let Student;
-try {
-  // Check if model already exists
-  Student = mongoose.model('Student');
-} catch (error) {
-  // Model doesn't exist, create it
-  Student = mongoose.model('Student', StudentSchema);
-}
+// Mock Student model
+const Student = {
+  findById: async (id) => {
+    return students.find(student => student._id === id);
+  },
+  findOne: async (query) => {
+    if (query.admissionNumber) {
+      return students.find(student => student.admissionNumber === query.admissionNumber);
+    }
+    return null;
+  },
+  find: async () => {
+    return [...students];
+  }
+};
 
 export default Student;
