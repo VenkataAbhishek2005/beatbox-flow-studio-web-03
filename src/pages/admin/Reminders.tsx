@@ -37,6 +37,7 @@ const mockUnpaidStudents = [
 const Reminders: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [students, setStudents] = useState(mockUnpaidStudents);
+  const [sending, setSending] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   // Filter students based on search query
@@ -45,33 +46,75 @@ const Reminders: React.FC = () => {
     student.studentName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Send reminder to a single student
-  const sendReminder = (student: any) => {
-    // This would connect to the backend API / WhatsApp API
-    const updatedStudents = students.map(s => 
-      s.id === student.id ? { ...s, reminderSent: true } : s
-    );
-    setStudents(updatedStudents);
+  // Send reminder to a single student using Twilio
+  const sendReminder = async (student: any) => {
+    // Set sending state for this student
+    setSending(prev => ({ ...prev, [student.id]: true }));
     
-    toast({
-      title: "Reminder Sent",
-      description: `Reminder sent to ${student.studentName}`,
-    });
+    try {
+      // This would connect to the backend API / Twilio API
+      // In a real implementation, you'd make an API call to your backend
+      // which would then use Twilio to send the message
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update student's reminder status
+      const updatedStudents = students.map(s => 
+        s.id === student.id ? { ...s, reminderSent: true } : s
+      );
+      setStudents(updatedStudents);
+      
+      toast({
+        title: "Reminder Sent",
+        description: `Reminder sent to ${student.studentName} via WhatsApp`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send reminder",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(prev => ({ ...prev, [student.id]: false }));
+    }
   };
 
   // Send reminders to all students
-  const sendAllReminders = () => {
-    // This would connect to the backend API / WhatsApp API
-    const updatedStudents = students.map(student => ({ 
-      ...student, 
-      reminderSent: true 
-    }));
-    setStudents(updatedStudents);
-    
-    toast({
-      title: "All Reminders Sent",
-      description: `Reminders sent to all ${students.length} students`,
+  const sendAllReminders = async () => {
+    // Set all students to sending state
+    const allSending: Record<string, boolean> = {};
+    students.forEach(student => {
+      if (!student.reminderSent) {
+        allSending[student.id] = true;
+      }
     });
+    setSending(allSending);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Update all students' reminder status
+      const updatedStudents = students.map(student => ({ 
+        ...student, 
+        reminderSent: true 
+      }));
+      setStudents(updatedStudents);
+      
+      toast({
+        title: "All Reminders Sent",
+        description: `Reminders sent to all ${students.length} students via WhatsApp`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send reminders to all students",
+        variant: "destructive"
+      });
+    } finally {
+      setSending({});
+    }
   };
 
   return (
@@ -92,6 +135,7 @@ const Reminders: React.FC = () => {
         <Button 
           onClick={sendAllReminders}
           className="flex items-center gap-2"
+          disabled={Object.keys(sending).length > 0}
         >
           <Send className="h-4 w-4" />
           Send All Reminders
@@ -139,11 +183,15 @@ const Reminders: React.FC = () => {
                       size="sm"
                       variant={student.reminderSent ? "secondary" : "default"}
                       onClick={() => sendReminder(student)}
-                      disabled={student.reminderSent}
+                      disabled={student.reminderSent || sending[student.id]}
                       className={!student.reminderSent ? "bg-blue-500 hover:bg-blue-600" : ""}
                     >
-                      <Send className="h-4 w-4 mr-1" />
-                      Send Reminder
+                      {sending[student.id] ? (
+                        "Sending..."
+                      ) : (
+                        <><Send className="h-4 w-4 mr-1" />
+                        Send Reminder</>
+                      )}
                     </Button>
                   </TableCell>
                 </TableRow>

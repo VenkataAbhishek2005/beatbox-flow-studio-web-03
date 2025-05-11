@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import StudentTransactionsDialog from '@/components/admin/StudentTransactionsDialog';
 
 // Mock transaction data
 const mockTransactions = [
@@ -66,6 +67,8 @@ const Transactions: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all');
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
   // Filter transactions based on search query and filters
   const filteredTransactions = mockTransactions.filter(transaction => {
@@ -95,6 +98,20 @@ const Transactions: React.FC = () => {
       description: `Transaction ${transaction.transactionId} marked as ${newStatus}`,
     });
   };
+
+  const handleRowClick = (student: any) => {
+    setSelectedStudent({
+      id: student.id,
+      admissionNumber: student.admissionNumber,
+      studentName: student.studentName
+    });
+    setDialogOpen(true);
+  };
+
+  // Get all transactions for the selected student
+  const selectedStudentTransactions = selectedStudent 
+    ? mockTransactions.filter(t => t.admissionNumber === selectedStudent.admissionNumber)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -162,7 +179,11 @@ const Transactions: React.FC = () => {
               </TableRow>
             ) : (
               filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
+                <TableRow 
+                  key={transaction.id}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleRowClick(transaction)}
+                >
                   <TableCell>{transaction.transactionId}</TableCell>
                   <TableCell>{transaction.admissionNumber}</TableCell>
                   <TableCell>{transaction.studentName}</TableCell>
@@ -178,7 +199,7 @@ const Transactions: React.FC = () => {
                   <TableCell>
                     {months[transaction.month - 1]} {transaction.year}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <Button
                       size="sm"
                       variant={transaction.status === 'unpaid' ? 'default' : 'secondary'}
@@ -198,6 +219,14 @@ const Transactions: React.FC = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Student Transactions Dialog */}
+      <StudentTransactionsDialog
+        isOpen={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        student={selectedStudent}
+        transactions={selectedStudentTransactions}
+      />
     </div>
   );
 };
