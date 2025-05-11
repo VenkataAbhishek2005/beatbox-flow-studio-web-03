@@ -10,8 +10,10 @@ import ContactFooter from "@/components/ContactFooter";
 import SectionDivider from "@/components/SectionDivider";
 
 const Index = () => {
+  console.log("Index component rendering"); // Debug log
+  
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full">
       <Navbar />
       <HeroSection />
       <SocialBar />
