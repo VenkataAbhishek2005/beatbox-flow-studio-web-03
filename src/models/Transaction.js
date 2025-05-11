@@ -30,7 +30,14 @@ const TransactionSchema = new mongoose.Schema({
   }
 });
 
-// Check if the model has been compiled already
-const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', TransactionSchema);
+// Fix the model creation to avoid the error with mongoose.models being undefined
+let Transaction;
+try {
+  // Check if model already exists
+  Transaction = mongoose.model('Transaction');
+} catch (error) {
+  // Model doesn't exist, create it
+  Transaction = mongoose.model('Transaction', TransactionSchema);
+}
 
 export default Transaction;
